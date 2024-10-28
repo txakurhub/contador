@@ -1,45 +1,62 @@
-class Counter {
-    private count: number = 0;
-    private countDisplay: HTMLElement;
-  
-    constructor() {
-      this.countDisplay = document.getElementById("count") as HTMLElement;
-      this.setupEventListeners();
+class CountdownTimer {
+    private countdownDisplay: HTMLElement;
+    private timerId?: number; // Para almacenar el ID del temporizador
+    private timeLeftInSeconds: number;
+
+    constructor(initialTimeInDays: number) {
+        this.countdownDisplay = document.getElementById('countdown') as HTMLElement;
+        this.timeLeftInSeconds = initialTimeInDays * 24 * 60 * 60; // Convertir días a segundos
+
+        this.setupEventListeners();
+        this.updateDisplay();
     }
-  
+
     private setupEventListeners(): void {
-      const decreaseBtn = document.getElementById("decrease");
-      const resetBtn = document.getElementById("reset");
-      const increaseBtn = document.getElementById("increase");
-  
-      if (decreaseBtn && resetBtn && increaseBtn) {
-        decreaseBtn.addEventListener("click", () => this.decrease());
-        resetBtn.addEventListener("click", () => this.reset());
-        increaseBtn.addEventListener("click", () => this.increase());
-      }
+        const startBtn = document.getElementById('start');
+        const resetBtn = document.getElementById('reset');
+
+        if (startBtn && resetBtn) {
+            startBtn.addEventListener('click', () => this.start());
+            resetBtn.addEventListener('click', () => this.reset());
+        }
     }
-  
+
     private updateDisplay(): void {
-      this.countDisplay.textContent = this.count.toString();
+        const days = Math.floor(this.timeLeftInSeconds / (24 * 60 * 60));
+        const hours = Math.floor((this.timeLeftInSeconds % (24 * 60 * 60)) / (60 * 60));
+        const minutes = Math.floor((this.timeLeftInSeconds % (60 * 60)) / 60);
+        const seconds = this.timeLeftInSeconds % 60;
+
+        this.countdownDisplay.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+        if (this.timeLeftInSeconds <= 0) {
+            clearInterval(this.timerId);
+            alert("¡Tiempo terminado!");
+        }
     }
-  
-    private decrease(): void {
-      this.count--;
-      this.updateDisplay();
+
+    private start(): void {
+        if (this.timerId) return; // Evitar múltiples temporizadores
+
+        this.timerId = window.setInterval(() => {
+            if (this.timeLeftInSeconds > 0) {
+                this.timeLeftInSeconds--;
+                this.updateDisplay();
+            } else {
+                clearInterval(this.timerId);
+            }
+        }, 1000);
     }
-  
+
     private reset(): void {
-      this.count = 0;
-      this.updateDisplay();
+        clearInterval(this.timerId);
+        this.timeLeftInSeconds = 14 * 24 * 60 * 60; // Reiniciar a dos semanas
+        this.updateDisplay();
+        this.timerId = undefined; // Limpiar el ID del temporizador
     }
-  
-    private increase(): void {
-      this.count++;
-      this.updateDisplay();
-    }
-  }
-  
-  // Inicializar el contador cuando se carga la página
-  window.addEventListener("DOMContentLoaded", () => {
-    new Counter();
-  });
+}
+
+// Inicializar el temporizador cuando se carga la página
+window.addEventListener('DOMContentLoaded', () => {
+    new CountdownTimer(14); // Iniciar con dos semanas
+});
